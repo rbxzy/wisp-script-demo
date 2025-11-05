@@ -6,5 +6,5 @@
     "moduleResolution": "node",
     "esModuleInterop": true
   },
-  "include": ["src/**/*", "server.ts"]
+  "include": ["src/**/*", "index.ts"]
 }

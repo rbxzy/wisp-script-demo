@@ -13,6 +13,16 @@ export class Lexer {
     ['func', TokenType.FUNC],
     ['return', TokenType.RETURN],
     ['end', TokenType.END],
+    ['if', TokenType.IF],
+    ['else', TokenType.ELSE],
+    ['elif', TokenType.ELIF],
+    ['and', TokenType.AND],
+    ['or', TokenType.OR],
+    ['not', TokenType.NOT],
+    ['for', TokenType.FOR],
+    ['while', TokenType.WHILE],
+    ['in', TokenType.IN],
+    ['global', TokenType.GLOBAL],
     ['true', TokenType.TRUE],
     ['false', TokenType.FALSE]
   ]);
@@ -91,7 +101,36 @@ export class Lexer {
         }
         break;
       case '=':
-        this.addToken(TokenType.EQUAL);
+        if (this.peek() === '=') {
+          this.advance();
+          this.addToken(TokenType.EQUAL_EQUAL);
+        } else {
+          this.addToken(TokenType.EQUAL);
+        }
+        break;
+      case '>':
+        if (this.peek() === '=') {
+          this.advance();
+          this.addToken(TokenType.GREATER_EQUAL);
+        } else {
+          this.addToken(TokenType.GREATER);
+        }
+        break;
+      case '<':
+        if (this.peek() === '=') {
+          this.advance();
+          this.addToken(TokenType.LESS_EQUAL);
+        } else {
+          this.addToken(TokenType.LESS);
+        }
+        break;
+      case '!':
+        if (this.peek() === '=') {
+          this.advance();
+          this.addToken(TokenType.BANG_EQUAL);
+        } else {
+          throw new Error(`Unexpected character: ${c} at line ${this.line}`);
+        }
         break;
       case '(':
         this.addToken(TokenType.LEFT_PAREN);
@@ -99,11 +138,29 @@ export class Lexer {
       case ')':
         this.addToken(TokenType.RIGHT_PAREN);
         break;
+      case '[':
+        this.addToken(TokenType.LEFT_BRACKET);
+        break;
+      case ']':
+        this.addToken(TokenType.RIGHT_BRACKET);
+        break;
+      case '{':
+        this.addToken(TokenType.LEFT_BRACE);
+        break;
+      case '}':
+        this.addToken(TokenType.RIGHT_BRACE);
+        break;
       case ',':
         this.addToken(TokenType.COMMA);
         break;
       case '.':
         this.addToken(TokenType.DOT);
+        break;
+      case ':':
+        this.addToken(TokenType.COLON);
+        break;
+      case ';':
+        this.addToken(TokenType.SEMICOLON);
         break;
       case '"':
         this.string('"');

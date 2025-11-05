@@ -73,7 +73,7 @@
         .CodeMirror {
             flex: 1;
             height: 100%;
-            font-size: 26px;
+            font-size: 18px;
         }
         .error {
             color: #f48771;
@@ -104,10 +104,50 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script>
+        // Define WispScript syntax highlighting mode
+        CodeMirror.defineSimpleMode("wispscript", {
+            start: [
+                // Comments
+                {regex: /\/\/.*/, token: "comment"},
+                {regex: /\/\*/, token: "comment", next: "comment"},
+                
+                // Strings
+                {regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string"},
+                {regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string"},
+                
+                // Keywords
+                {regex: /\b(var|func|return|end|if|else|elif|and|or|not|for|while|in|global|true|false)\b/, token: "keyword"},
+                
+                // Built-in functions
+                {regex: /\b(print|wait|createClone|key_down|key_up|random|randrange|floor|ceil|round|abs|pow|sqrt|min|max|sin|cos|tan|atan2)\b/, token: "builtin"},
+                
+                // Numbers
+                {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
+                
+                // Operators
+                {regex: /[-+\/*=<>!]+/, token: "operator"},
+                
+                // Identifiers (variable names, function names)
+                {regex: /[a-z_][a-z0-9_]*/i, token: "variable"},
+                
+                // Punctuation
+                {regex: /[\[\]{}(),:.]/, token: "punctuation"},
+            ],
+            comment: [
+                {regex: /.*?\*\//, token: "comment", next: "start"},
+                {regex: /.*/, token: "comment"}
+            ],
+            meta: {
+                lineComment: "//"
+            }
+        });
+    </script>
     <script type="module">
         const sourceEditor = CodeMirror.fromTextArea(document.getElementById('sourceEditor'), {
-            mode: 'javascript',
+            mode: 'wispscript',
             theme: 'monokai',
             lineNumbers: true,
             indentUnit: 2,
@@ -121,42 +161,125 @@
             readOnly: true,
             indentUnit: 2,
             tabSize: 2,
+            lineWrapping: true,
         });
 
         // Sample code
         sourceEditor.setValue(`/*
-    WispScript v0.4.1 (demo)
-    (Does not include the following)
-    - If statements
-    - for & while loops
-    - list
-    - objects
-    - classes (although probably not needed)
-    - 
+    Particles.wisp (Particle System Example Script)
+    Demonstrates all supported WispScript v0.5.1(beta) features.
+		
+    ** Features summary generated using ChatGGPT **
+    ───────────────────────────────────────────────
+    🧠 Language Features Shown in This Example:
+    ───────────────────────────────────────────────
+    • Variable declarations:
+        var name = value
+        global var name = value  → accessible across all scripts as 'global name'
+
+    • Function declarations:
+        func name(params) ... end
+        global func name(params) ... end  → globally accessible functions
+
+    • Built-in special functions:
+        func _forever()   → runs every frame
+        func _on_clone_start(clone) → runs for each created clone
+
+    • Control flow:
+        if (condition) ... end
+        if (condition) ... else ... end
+        for (var i = 0; i < n; i++) ... end
+        while (condition) ... end
+
+    • All CodeWisp functions built-in:
+        createClone()
+        clone.delete()
+        wait(seconds)
+
+    • Math library:
+        random(min, max)
+        floor(value)
+        sqrt(value)
+        abs(value)
+        etc.
+
+    • Object literals (data containers):
+        var obj = { key: value, key2: value2 }
+
+    • Lists:
+        var list = []
+        list.push(value)
+        list.splice(index, count)
+        list.length
+        list[i]
+
+    • Global access:
+        global variableName
+        global functionName(args)
+
+    • Sprite properties and data fields:
+        sprite.x, sprite.y, sprite.rotation, sprite.costume
+        clone.data = { ... }  → custom per-clone data storage
+    ───────────────────────────────────────────────
 */
-var speed = 1
 
-func start() // Get's called on game run
-	// Hide sprite
-	sprite.x = 500
-	sprite.y = 500
+func vector(x, y)
+	return {x: x, y: y}
 end
 
-func _forever() // Forever loop
-	var clone = createClone()
-  clone.x   = 500
-	clone.y   = 0
+// Max particles in a single burst
+var MIN_PARTICLES = 5
+var MAX_PARTICLES = 12
 
-	wait(5)
-end
+func particles(costumeName, x, y)
+	var particleCount = floor(random(MIN_PARTICLES, MAX_PARTICLES))
 
-func _on_clone_start(clone) // Clone created
-	func _forever() // Forever loop
-		clone.x -= speed
+	for (var i = 0; i < particleCount; i++)
+		var clone = createClone()
+		clone.x = x
+		clone.y = y
+
+		var target_x = random(-50, 50)
+		var target_y = random(-50, 50)
+
+		var dx = target_x
+		var dy = target_y
+		var distance = sqrt(dx * dx + dy * dy) or 1 // prevent division by 0
+
+		// Random speed and lifespan
+		var speed    = random(1.5, 3)
+		var lifespan = random(15, 35)
+
+		clone.data = {
+			vx: (dx / distance) * speed,
+			vy: (dy / distance) * speed,
+			lifespan: lifespan,
+			age: 0,
+		}
 	end
 end
 
-start()`);
+func _on_clone_start(clone)
+	func _forever()
+		clone.x += clone.data.vx
+		clone.y += clone.data.vy
+
+		clone.data.age += 1
+		clone.transparency = (clone.data.age / clone.data.lifespan) * 100
+
+		if (clone.data.age >= clone.data.lifespan)
+			clone.delete()
+		end
+	end
+end
+
+// Expose particle system globally
+global func spawnParticles(costumeName, x, y)
+	particles(costumeName, x, y)
+end
+
+// Example usage (accessible from any script)
+global spawnParticles("Wispy", 0, 0)`);
 
         document.getElementById('runBtn').addEventListener('click', async () => {
             try {

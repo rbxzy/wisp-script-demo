@@ -19,6 +19,7 @@ export interface ExprVisitor<R> {
   visitGetExpr(expr: Get): R;
   visitAssignExpr(expr: Assign): R;
   visitSetExpr(expr: Set): R;
+  visitLogicalExpr(expr: Logical): R;
 }
 
 export interface StmtVisitor<R> {
@@ -27,6 +28,10 @@ export interface StmtVisitor<R> {
   visitPrintStmt(stmt: Print): R;
   visitFunctionStmt(stmt: Function): R;
   visitReturnStmt(stmt: Return): R;
+  visitIfStmt(stmt: If): R;
+  visitWhileStmt(stmt: While): R;
+  visitForStmt(stmt: For): R;
+  visitForInStmt(stmt: ForIn): R;
 }
 
 // Expression classes
@@ -113,6 +118,20 @@ export class Call extends Expr {
   }
 }
 
+export class Logical extends Expr {
+  constructor(
+    public left: Expr,
+    public operator: Token,
+    public right: Expr
+  ) {
+    super();
+  }
+
+  accept<R>(visitor: ExprVisitor<R>): R {
+    return visitor.visitLogicalExpr(this);
+  }
+}
+
 // Statement classes
 export class Var extends Stmt {
   constructor(
@@ -168,5 +187,63 @@ export class Return extends Stmt {
 
   accept<R>(visitor: StmtVisitor<R>): R {
     return visitor.visitReturnStmt(this);
+  }
+}
+
+export class If extends Stmt {
+  constructor(
+    public condition: Expr,
+    public thenBranch: Stmt[],
+    public elseifBranches: { condition: Expr; body: Stmt[] }[],
+    public elseBranch: Stmt[] | null
+  ) {
+    super();
+  }
+
+  accept<R>(visitor: StmtVisitor<R>): R {
+    return visitor.visitIfStmt(this);
+  }
+}
+
+export class While extends Stmt {
+  constructor(
+    public condition: Expr,
+    public body: Stmt[]
+  ) {
+    super();
+  }
+
+  accept<R>(visitor: StmtVisitor<R>): R {
+    return visitor.visitWhileStmt(this);
+  }
+}
+
+export class For extends Stmt {
+  constructor(
+    public initializer: Stmt | null,
+    public condition: Expr | null,
+    public increment: Expr | null,
+    public body: Stmt[]
+  ) {
+    super();
+  }
+
+  accept<R>(visitor: StmtVisitor<R>): R {
+    return visitor.visitForStmt(this);
+  }
+}
+
+export class ForIn extends Stmt {
+  constructor(
+    public indexVar: Token,
+    public itemVar: Token,
+    public iterable: Expr,
+    public body: Stmt[]
+  ) {
+    super();
+  }
+
+  accept<R>(visitor: StmtVisitor<R>): R {
+    return visitor.visitForInStmt(this);
   }
 }
