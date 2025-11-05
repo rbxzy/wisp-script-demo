@@ -225,6 +225,9 @@
     ───────────────────────────────────────────────
 */
 
+sprite.x = 500
+sprite.y = 500
+
 func vector(x, y)
 	return {x: x, y: y}
 end
@@ -276,12 +279,20 @@ func _on_clone_start(clone)
 end
 
 // Expose particle system globally
-global func spawnParticles(costumeName, x, y)
+global func spawn_particles(costumeName, x, y)
 	particles(costumeName, x, y)
 end
 
-// Example usage (accessible from any script)
-global spawnParticles("Wispy", 0, 0)`);
+// Spawn particles in random positions
+func _forever()
+	
+  var random_position = vector(random(-300,300), random(-300,300))
+  
+  // Access global func spawn_particles
+	global spawn_particles("Wispy", random_position.x, random_position.y)
+
+	wait(2)
+end`);
 
         document.getElementById('runBtn').addEventListener('click', async () => {
             try {
