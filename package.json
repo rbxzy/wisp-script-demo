@@ -1,0 +1,23 @@
+{
+  "name": "wisp-script-transpiler",
+  "version": "1.0.0",
+  "description": "A simple transpiler for WispScript to TypeScript",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+  "build": "npx tsc",
+  "start": "node dist/index.js"
+},
+  "keywords": [
+    "transpiler",
+    "compiler",
+    "typescript",
+    "wisp-script"
+  ],
+  "author": "WispScript Team",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  }
+}
