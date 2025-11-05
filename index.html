@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WispScript Transpiler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+        }
+        header {
+            background: #2d2d30;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #3e3e42;
+        }
+        h1 {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        #runBtn {
+            padding: 8px 24px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        #runBtn:hover {
+            background: #1177bb;
+        }
+        #runBtn:active {
+            background: #0d5a8f;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #3e3e42;
+        }
+        .editor-panel:last-child {
+            border-right: none;
+        }
+        .editor-header {
+            background: #252526;
+            color: #ccc;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid #3e3e42;
+        }
+        .CodeMirror {
+            flex: 1;
+            height: 100%;
+            font-size: 26px;
+        }
+        .error {
+            color: #f48771;
+            padding: 12px;
+            background: #3e1e1e;
+            border-left: 3px solid #f48771;
+            margin: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WispScript Transpiler</h1>
+        <button id="runBtn">Transpile →</button>
+    </header>
+    <div class="container">
+        <div class="editor-panel">
+            <div class="editor-header">WispScript Source</div>
+            <textarea id="sourceEditor"></textarea>
+        </div>
+        <div class="editor-panel">
+            <div class="editor-header">TypeScript Output</div>
+            <textarea id="outputEditor"></textarea>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script type="module">
+        const sourceEditor = CodeMirror.fromTextArea(document.getElementById('sourceEditor'), {
+            mode: 'javascript',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 2,
+            tabSize: 2,
+        });
+
+        const outputEditor = CodeMirror.fromTextArea(document.getElementById('outputEditor'), {
+            mode: 'javascript',
+            theme: 'monokai',
+            lineNumbers: true,
+            readOnly: true,
+            indentUnit: 2,
+            tabSize: 2,
+        });
+
+        // Sample code
+        sourceEditor.setValue(`/*
+    WispScript v0.4.1 (demo)
+    (Does not include the following)
+    - If statements
+    - for & while loops
+    - list
+    - objects
+    - classes (although probably not needed)
+    - 
+*/
+var speed = 1
+
+func start() // Get's called on game run
+	// Hide sprite
+	sprite.x = 500
+	sprite.y = 500
+end
+
+func _forever() // Forever loop
+	var clone = createClone()
+  clone.x   = 500
+	clone.y   = 0
+
+	wait(5)
+end
+
+func _on_clone_start(clone) // Clone created
+	func _forever() // Forever loop
+		clone.x -= speed
+	end
+end
+
+start()`);
+
+        document.getElementById('runBtn').addEventListener('click', async () => {
+            try {
+                const source = sourceEditor.getValue();
+                const response = await fetch('/transpile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ source }),
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    outputEditor.setValue(`// Error:\n// ${data.error}`);
+                } else {
+                    outputEditor.setValue(data.result);
+                }
+            } catch (error) {
+                outputEditor.setValue(`// Error:\n// ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>
